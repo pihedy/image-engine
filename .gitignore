@@ -1,2 +1,13 @@
-vendor
-src/settings.php
+tmp/
+.log
+.idea/
+.vscode/
+.sass-cache/
+/logs/*
+node_modules/
+vendor/
+/composer.lock
+/package-lock.json
+teszt/
+teszt/*
+*.db
