@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Lib\Controller;
 use App\Services\GoogleClientService;
+use App\Services\ImageGenerateService;
 use Automattic\WooCommerce\Client;
 
 /**
@@ -33,7 +34,13 @@ class ApiControllerV1 extends Controller
 
         if (is_array($requestBody['products'])) {
             foreach ($requestBody['products'] as $value) {
-                $productOrigin[$value] = $woocommerce->get("products/{$value}")['sku'];
+                $data = $woocommerce->get("products/{$value}");
+
+                $productOrigin[$value] = [
+                    'sku' => $data['sku'],
+                    'attributes' => $data['attributes'],
+                    'meta_data' => $data['meta_data'],
+                ];
             }
         }
 
@@ -41,19 +48,15 @@ class ApiControllerV1 extends Controller
             GoogleClientService::getClient()
         );
 
-        $productShades = [];
-
         foreach ($productOrigin as $key => $value) {
-            $productShades[$key]['sku'] = $value;
-
             foreach ($this->container->get('settings')['imageShades'] as $shadeKey => $shadeValue) {
-                $productShades[$key]['imageShades'][$shadeKey] = "{$value}{$shadeValue}.png";
+                $productOrigin[$key]['imageShades'][$shadeKey] = $value['sku'] . $shadeValue . ".png";
             }
         }
 
         $baseImages = [];
 
-        foreach ($productShades as $key => $value) {
+        foreach ($productOrigin as $key => $value) {
             $dark = $value['imageShades']['dark'];
             $light = $value['imageShades']['light'];
 
@@ -77,9 +80,11 @@ class ApiControllerV1 extends Controller
             );
 
             file_put_contents(
-                APP_PATH_ROOT . "/tmp/{$key}",
+                APP_PATH_ROOT . "/tmp/base-images/{$key}",
                 $content->getBody()->getContents()
             );
         }
+
+        ImageGenerateService::generateImages($productOrigin, $baseImages);
     }
 }

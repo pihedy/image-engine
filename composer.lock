@@ -4,8 +4,56 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1d5fa29fb0a0533a89a285cc6dd841ce",
+    "content-hash": "e41554a665d6d9c85fc96db6321e24e8",
     "packages": [
+        {
+            "name": "ajaxray/php-watermark",
+            "version": "v0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ajaxray/php-watermark.git",
+                "reference": "7e4c79d063bc52c39145eadda6305a04303f5703"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ajaxray/php-watermark/zipball/7e4c79d063bc52c39145eadda6305a04303f5703",
+                "reference": "7e4c79d063bc52c39145eadda6305a04303f5703",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6 || >=7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "5.7.5",
+                "satooshi/php-coveralls": "dev-master"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ajaxray\\PHPWatermark\\": "src/Ajaxray/PHPWatermark/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Anis Uddin Ahmad",
+                    "email": "anis.programmer@gmail.com"
+                }
+            ],
+            "description": "Add text or image watermark on images.",
+            "homepage": "http://github.com/ajaxray/php-watermark",
+            "keywords": [
+                "image",
+                "image-manipulation",
+                "imagemagick-watermark",
+                "imagemagick-wrapper",
+                "watermark"
+            ],
+            "time": "2017-03-18T05:50:04+00:00"
+        },
         {
             "name": "aneek/slim-event-dispatcher",
             "version": "1.0",
@@ -1714,6 +1762,67 @@
                 "router"
             ],
             "time": "2018-09-16T10:54:21+00:00"
+        },
+        {
+            "name": "sybio/image-workshop",
+            "version": "2.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Sybio/ImageWorkshop.git",
+                "reference": "aa95fea257370f9ba316763ac278c2cd8d5be38a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Sybio/ImageWorkshop/zipball/aa95fea257370f9ba316763ac278c2cd8d5be38a",
+                "reference": "aa95fea257370f9ba316763ac278c2cd8d5be38a",
+                "shasum": ""
+            },
+            "require": {
+                "ext-gd": "*",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.0",
+                "phpunit/phpunit": "~4.5"
+            },
+            "suggest": {
+                "ext-exif": "Allows to read and keep images EXIF data"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "PHPImageWorkshop": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Clément Guillemain",
+                    "homepage": "http://clementguillemain.fr",
+                    "role": "Developer / Freelancer"
+                },
+                {
+                    "name": "ImageWorkshop Community",
+                    "homepage": "https://github.com/Sybio/ImageWorkshop/graphs/contributors"
+                }
+            ],
+            "description": "Powerful PHP class using GD library to work easily with images including layer notion (like Photoshop or GIMP)",
+            "homepage": "http://phpimageworkshop.com",
+            "keywords": [
+                "class",
+                "crop",
+                "gd",
+                "image",
+                "library",
+                "resize",
+                "rotate",
+                "thumbnail",
+                "watermark"
+            ],
+            "time": "2018-04-17T19:19:29+00:00"
         },
         {
             "name": "symfony/contracts",
