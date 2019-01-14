@@ -14,13 +14,13 @@ class ApiControllerV1 extends Controller
 {
     public function postProduct($request, $response)
     {
-        // Default status code.
+        /* Default status code. */
         $statusCode = 201;
 
-        // Getting data from the request.
+        /* Getting data from the request. */
         $requestBody = $request->getParsedBody();
 
-        // Getting friend data.
+        /* Getting friend data. */
         $friendData = $this->container->get('settings')['friends'][$requestBody['host']];
 
         $woocommerce = new Client(
@@ -86,5 +86,68 @@ class ApiControllerV1 extends Controller
         }
 
         ImageGenerateService::generateImages($productOrigin, $baseImages);
+    }
+
+    public function setBaseProducts($request, $response)
+    {
+        /* Default status code. */
+        $statusCode = 201;
+
+        /* Getting data from the request. */
+        $requestBody = $request->getParsedBody();
+
+        /* Getting friend data. */
+        $friendData = $this->container->get('settings')['friends'][$requestBody['host']];
+
+        $woocommerce = new Client(
+            $friendData['domain'],
+            $friendData['woocommerce']['userKey'],
+            $friendData['woocommerce']['secretKey'],
+            $friendData['woocommerce']['options']
+        );
+
+        $productOrigin = [];
+
+        foreach ($requestBody['base_products'] as $requestKey => $requestValue) {
+            $productData = $woocommerce->get("products/{$requestKey}");
+            $slug = str_replace('-', '_', $productData['slug']);
+
+            $parameters = [
+                'per_page' => 99
+            ];
+
+            $productVatiations = $woocommerce->get("products/{$requestKey}/variations", $parameters);
+            
+            $productOrigin[$requestKey]['slug'] = $slug;
+            $productOrigin[$requestKey]['settings'] = $requestValue;
+
+            $iterator = 'none';
+
+            foreach ($productVatiations as $key => $value) {
+                if ($value['purchasable'] === false) {
+                    continue;
+                }
+
+                parse_str(parse_url($value['permalink'], PHP_URL_QUERY), $query);
+
+                if (isset($query['attribute_pa_szin']) && ($query['attribute_pa_szin'] != $iterator)) {
+                    $productOrigin[$requestKey]['colors'][] = $query['attribute_pa_szin'];
+                    $iterator = $query['attribute_pa_szin'];
+                }
+            }
+        }
+
+        if (!\file_exists(APP_PATH_ROOT . "/settings/{$requestBody['host']}")) {
+            mkdir(
+                APP_PATH_ROOT . "/settings/{$requestBody['host']}",
+                0755,
+                true
+            );
+        }
+
+        file_put_contents(
+            APP_PATH_ROOT . "/settings/{$requestBody['host']}/base-products.json",
+            json_encode($productOrigin)
+        );
     }
 }

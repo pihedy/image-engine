@@ -1,15 +1,21 @@
 <?php
 
-// Api
+/* API group. */
 $app->group('/api', function () {
 
-    // V1
+    /* API v1. */
     $this->group('/v1', function () {
 
-        // Order create
+        /* Create design product images. */
         $this->post(
-            '/product',
-            'ApiControllerV1:postProduct'
+            '/generate_images',
+            'ApiControllerV1:generateImages'
+        );
+
+        /* Create base product settings file. */
+        $this->post(
+            '/set_base_products',
+            'ApiControllerV1:setBaseProducts'
         );
 
     });
