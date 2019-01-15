@@ -12,7 +12,7 @@ use Automattic\WooCommerce\Client;
  */
 class ApiControllerV1 extends Controller
 {
-    public function postProduct($request, $response)
+    public function generateImages($request, $response)
     {
         /* Default status code. */
         $statusCode = 201;
@@ -39,10 +39,13 @@ class ApiControllerV1 extends Controller
                 $productOrigin[$value] = [
                     'sku' => $data['sku'],
                     'attributes' => $data['attributes'],
-                    'meta_data' => $data['meta_data'],
+                    'metaData' => $data['meta_data'],
                 ];
             }
         }
+
+        /* var_dump($productOrigin[1344209]['meta_data'][37]); */
+        /* var_dump($productOrigin[1344209]['attributes']); */
 
         $service = new \Google_Service_Drive(
             GoogleClientService::getClient()
@@ -80,12 +83,16 @@ class ApiControllerV1 extends Controller
             );
 
             file_put_contents(
-                APP_PATH_ROOT . "/tmp/base-images/{$key}",
+                APP_PATH_ROOT . "/images/design-images/{$key}",
                 $content->getBody()->getContents()
             );
         }
 
-        ImageGenerateService::generateImages($productOrigin, $baseImages);
+        ImageGenerateService::generateImages(
+            $productOrigin, 
+            $baseImages,
+            $requestBody['host']
+        );
     }
 
     public function setBaseProducts($request, $response)
@@ -137,7 +144,7 @@ class ApiControllerV1 extends Controller
             }
         }
 
-        if (!\file_exists(APP_PATH_ROOT . "/settings/{$requestBody['host']}")) {
+        if (!file_exists(APP_PATH_ROOT . "/settings/{$requestBody['host']}")) {
             mkdir(
                 APP_PATH_ROOT . "/settings/{$requestBody['host']}",
                 0755,
