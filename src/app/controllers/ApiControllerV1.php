@@ -44,9 +44,6 @@ class ApiControllerV1 extends Controller
             }
         }
 
-        /* var_dump($productOrigin[1344209]['meta_data'][37]); */
-        /* var_dump($productOrigin[1344209]['attributes']); */
-
         $service = new \Google_Service_Drive(
             GoogleClientService::getClient()
         );
