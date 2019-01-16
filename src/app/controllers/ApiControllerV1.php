@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Lib\Controller;
 use App\Services\GoogleClientService;
 use App\Services\ImageGenerateService;
+use App\Services\ThumbnailGenerateService;
 use Automattic\WooCommerce\Client;
 
 /**
@@ -12,6 +13,12 @@ use Automattic\WooCommerce\Client;
  */
 class ApiControllerV1 extends Controller
 {
+    /**
+     * generateImages
+     * @param mixed $request 
+     * @param mixed $response 
+     * @return mixed 
+     */
     public function generateImages($request, $response)
     {
         /* Default status code. */
@@ -90,8 +97,19 @@ class ApiControllerV1 extends Controller
             $baseImages,
             $requestBody['host']
         );
+
+        ThumbnailGenerateService::generateThumbnails(
+            $productOrigin,
+            $requestBody['host']
+        );
     }
 
+    /**
+     * setBaseProducts
+     * @param mixed $request 
+     * @param mixed $response 
+     * @return mixed 
+     */
     public function setBaseProducts($request, $response)
     {
         /* Default status code. */
@@ -152,6 +170,34 @@ class ApiControllerV1 extends Controller
         file_put_contents(
             APP_PATH_ROOT . "/settings/{$requestBody['host']}/base-products.json",
             json_encode($productOrigin)
+        );
+    }
+
+    /**
+     * setThumbnailSettings
+     * @param mixed $request 
+     * @param mixed $response 
+     * @return mixed 
+     */
+    public function setThumbnailSettings($request, $response)
+    {
+        /* Default status code. */
+        $statusCode = 201;
+
+        /* Getting data from the request. */
+        $requestBody = $request->getParsedBody();
+
+        if (!file_exists(APP_PATH_ROOT . "/settings/{$requestBody['host']}")) {
+            mkdir(
+                APP_PATH_ROOT . "/settings/{$requestBody['host']}",
+                0755,
+                true
+            );
+        }
+
+        file_put_contents(
+            APP_PATH_ROOT . "/settings/{$requestBody['host']}/thumbnail-settings.json",
+            json_encode($requestBody['thumbs'])
         );
     }
 }

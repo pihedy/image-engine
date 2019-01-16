@@ -10,4 +10,5 @@ vendor/
 /package-lock.json
 teszt/
 teszt/*
+images/design-images/*
 *.db
