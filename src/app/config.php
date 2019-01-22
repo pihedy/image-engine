@@ -6,6 +6,12 @@ return [
         'dark' => '_D',
         'light' => '_L',
     ],
+    'space' => [
+        'key' => 'PEI4PBQQQDBWQ23KXCOT',
+        'secret'=> 'Bk0Ta0nVJ/TdNJjIoL0ACRiz8MdoZMKBJq3D4/epwmY',
+        'name' => 'isabel',
+        'region' => 'ams3'
+    ],
     'friends' => [
         'pamutlabor' => [],
         'playground' => [

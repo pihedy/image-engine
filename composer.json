@@ -23,6 +23,7 @@
         "automattic/woocommerce": "^1.3",
         "google/apiclient": "^2.0",
         "ajaxray/php-watermark": "^0.1.1",
-        "sybio/image-workshop": "^2.1.0"
+        "sybio/image-workshop": "^2.1.0",
+        "sociallydev/spaces-api": "dev-master"
     }
 }

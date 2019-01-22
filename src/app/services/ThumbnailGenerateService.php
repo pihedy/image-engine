@@ -2,28 +2,20 @@
 
 namespace App\Services;
 
-use App\Managers\FilesystemManager;
 use PHPImageWorkshop\ImageWorkshop;
 
 class ThumbnailGenerateService
 {
-    public static function generateThumbnails(array $productData, string $friendName)
+    public static function generateThumbnails(array $productValue, array $thumbnailSettings)
     {
-        $thumbnailSettings = json_decode(
-            file_get_contents(APP_PATH_ROOT . "/settings/{$friendName}/thumbnail-settings.json"),
-            true
-        );
+        $files = glob(APP_PATH_ROOT . "/tmp/{$productValue['sku']}/*.jpg");
 
-        foreach ($productData as $productKey => $productValue) {
-            $files = glob(APP_PATH_ROOT . "/tmp/{$productValue['sku']}/*.jpg");
-
-            foreach ($files as $fileValue) {
-                self::generate(
-                    $productValue['sku'],
-                    pathinfo($fileValue),
-                    $thumbnailSettings
-                );
-            }
+        foreach ($files as $fileValue) {
+            self::generate(
+                $productValue['sku'],
+                pathinfo($fileValue),
+                $thumbnailSettings
+            );
         }
     }
 
@@ -54,4 +46,12 @@ class ThumbnailGenerateService
             );
         }
     }
+
+    /* private function uploadFiles(string $folder)
+    {
+        $this->SpaceService->UploadDirectory(
+            APP_PATH_ROOT . "/tmp/{$folder}",
+            $folder
+        );
+    } */
 }

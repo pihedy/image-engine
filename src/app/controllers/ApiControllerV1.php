@@ -3,9 +3,9 @@
 namespace App\Controllers;
 
 use App\Lib\Controller;
+use App\Managers\GenerateManager;
 use App\Services\GoogleClientService;
-use App\Services\ImageGenerateService;
-use App\Services\ThumbnailGenerateService;
+use App\Services\SpaceService;
 use Automattic\WooCommerce\Client;
 
 /**
@@ -92,16 +92,14 @@ class ApiControllerV1 extends Controller
             );
         }
 
-        ImageGenerateService::generateImages(
-            $productOrigin, 
+        $GenerateManager = new GenerateManager(
+            $productOrigin,
             $baseImages,
-            $requestBody['host']
+            $requestBody['host'],
+            $this->container->get('settings')
         );
 
-        ThumbnailGenerateService::generateThumbnails(
-            $productOrigin,
-            $requestBody['host']
-        );
+        $GenerateManager->run();
     }
 
     /**

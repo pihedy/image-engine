@@ -6,58 +6,45 @@ use PHPImageWorkshop\ImageWorkshop;
 
 class ImageGenerateService
 {
-    public static function generateImages(array $productData, array $baseImages, string $friendName)
+    public static function generateImages(array $productValue, array $baseImages, array $baseProducts)
     {
-        foreach ($productData as $productKey => $productValue) {
-            $productData[$productKey]['colors'] = self::cleanColors($productValue['attributes']);
-            $productData[$productKey]['basics'] = self::cleanBasics($productValue['metaData']);
+        $product = $productValue;
 
-            unset($productData[$productKey]['attributes']);
-            unset($productData[$productKey]['metaData']);
-        }
+        $productValue['colors'] = self::cleanColors($productValue['attributes']);
+        $productValue['basics'] = self::cleanBasics($productValue['metaData']);
+        $productValue['baseIntersect'] = array_intersect_key($baseProducts, array_flip($productValue['basics']));
 
-        $baseData = json_decode(
-            file_get_contents(APP_PATH_ROOT . "/settings/{$friendName}/base-products.json"),
-            true
-        );
+        foreach ($productValue['baseIntersect'] as $baseKey => $baseValue) {
+            if (!isset($baseValue['colors'])) {
+                continue;
+            }
 
-        foreach ($productData as $key => $value) {
-            $productData[$key]['baseIntersect'] = array_intersect_key($baseData, array_flip($value['basics']));
-
-            unset($productData[$key]['basics']);
-        }
-
-        foreach ($productData as $productKey => $productValue) {
-            foreach ($productValue['baseIntersect'] as $baseKey => $baseValue) {
-                if (!isset($baseValue['colors'])) {
-                    continue;
-                }
-
-                foreach ($baseValue['colors'] as $key => $value) {
-                    if (!in_array($value, $productValue['colors'])) {
-                        unset($productData[$productKey][$baseKey][$key]);
-                    }
+            foreach ($baseValue['colors'] as $key => $value) {
+                if (!in_array($value, $productValue['colors'])) {
+                    unset($productValue[$baseKey][$key]);
                 }
             }
         }
 
-        foreach ($productData as $productKey => $productValue) {
-            if (!file_exists(APP_PATH_ROOT . "/tmp/{$productValue['sku']}")) {
-                mkdir(
-                    APP_PATH_ROOT . "/tmp/{$productValue['sku']}",
-                    0755,
-                    true
-                );
+        if (!file_exists(APP_PATH_ROOT . "/tmp/{$productValue['sku']}")) {
+            mkdir(
+                APP_PATH_ROOT . "/tmp/{$productValue['sku']}",
+                0755,
+                true
+            );
+        }
+
+        foreach ($productValue['imageShades'] as $imageKey => $imageValue) {
+            if (!array_key_exists($imageValue, $baseImages)) {
+                continue;
             }
 
-            foreach ($productValue['imageShades'] as $imageKey => $imageValue) {
-                self::imagesComposite(
-                    $imageKey,
-                    $imageValue,
-                    $productValue['sku'],
-                    $productValue['baseIntersect']
-                );
-            }
+            self::imagesComposite(
+                $imageKey,
+                $imageValue,
+                $productValue['sku'],
+                $productValue['baseIntersect']
+            );
         }
     }
 
