@@ -60,10 +60,10 @@ class GenerateManager
                 $this->thumbnailSettings
             );
 
-            ImageUploadService::uploadFiles(
+            /* ImageUploadService::uploadFiles(
                 $productValue,
                 $this->SpaceConnect
-            );
+            ); */
         }
     }
 }

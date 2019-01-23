@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use PHPImageWorkshop\ImageWorkshop;
+use App\Managers\ImageManager;
+use Amp\Parallel\Worker;
+use Amp\Promise;
 
 class ImageGenerateService
 {
@@ -81,6 +84,7 @@ class ImageGenerateService
 
             foreach ($baseValue['colors'] as $colorKey => $colorValue) {
                 $templateFile = APP_PATH_ROOT . "/images/base-images/{$baseValue['slug']}/{$shadeFolder}/{$baseValue['slug']}-{$colorValue}.jpg";
+                $tempPath = APP_PATH_ROOT . "/tmp/{$designSku}";
 
                 if (file_exists($templateFile)) {
                     $norwayLayer = ImageWorkshop::initFromPath($templateFile);
@@ -90,7 +94,19 @@ class ImageGenerateService
                     $watermarkLayer->resizeInPixel(200, null, true);
 
                     $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
-                    $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$designSku}", "{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg", true, null, 95);
+                    $norwayLayer->save(
+                        $tempPath, 
+                        "{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg", 
+                        true, 
+                        null, 
+                        90
+                    );
+
+                    $actualFile = "{$tempPath}/{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg";
+
+                    /* ImageManager::compression(
+                        $actualFile
+                    ); */
                 }
 
                 self::generateFacebookFeatured(
@@ -121,7 +137,7 @@ class ImageGenerateService
             $watermarkLayer->resizeInPixel(500, null, true);
 
             $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
-            $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$designSku}/afacebookfeatured", "afacebookfeatured-{$color}.jpg", true, null, 95);
+            $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$designSku}", "{$designSku}-afacebookfeatured-{$color}.jpg", true, null, 95);
         }
     }
 
@@ -136,7 +152,7 @@ class ImageGenerateService
             $watermarkLayer->resizeInPixel(200, null, true);
 
             $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
-            $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$designSku}/afeaturedimage", "afeaturedimage-{$color}.jpg", true, null, 95);
+            $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$designSku}", "{$designSku}-afeaturedimage-{$color}.jpg", true, null, 95);
         }
     }
 

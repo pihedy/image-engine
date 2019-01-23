@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use PHPImageWorkshop\ImageWorkshop;
+use App\Managers\ImageManager;
 
 class ThumbnailGenerateService
 {
@@ -22,6 +23,7 @@ class ThumbnailGenerateService
     private static function generate(string $folder, array $fileValue, array $thumbnailSettings)
     {
         set_time_limit(0);
+        $tempPath = APP_PATH_ROOT . "/tmp/{$folder}";
 
         foreach ($thumbnailSettings as $thumbKey => $thumbValue) {
             $layer = ImageWorkshop::initFromPath(
@@ -38,20 +40,18 @@ class ThumbnailGenerateService
             );
 
             $layer->save(
-                APP_PATH_ROOT . "/tmp/{$folder}",
+                $tempPath,
                 "{$fileValue['filename']}-{$thumbValue['width']}x{$thumbValue['height']}.jpg",
                 true,
                 null,
-                95
+                90
             );
+
+            $actualFile = "{$tempPath}/{$fileValue['filename']}-{$thumbValue['width']}x{$thumbValue['height']}.jpg";
+
+            /* ImageManager::compression(
+                $actualFile
+            ); */
         }
     }
-
-    /* private function uploadFiles(string $folder)
-    {
-        $this->SpaceService->UploadDirectory(
-            APP_PATH_ROOT . "/tmp/{$folder}",
-            $folder
-        );
-    } */
 }
