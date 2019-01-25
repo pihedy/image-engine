@@ -11,8 +11,6 @@ class ImageGenerateService
 {
     public static function generateImages(array $productValue, array $baseImages, array $baseProducts)
     {
-        $product = $productValue;
-
         $productValue['colors'] = self::cleanColors($productValue['attributes']);
         $productValue['basics'] = self::cleanBasics($productValue['metaData']);
         $productValue['baseIntersect'] = array_intersect_key($baseProducts, array_flip($productValue['basics']));
@@ -99,7 +97,7 @@ class ImageGenerateService
                         "{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg", 
                         true, 
                         null, 
-                        90
+                        85
                     );
 
                     $actualFile = "{$tempPath}/{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg";
@@ -137,7 +135,7 @@ class ImageGenerateService
             $watermarkLayer->resizeInPixel(500, null, true);
 
             $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
-            $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$designSku}", "{$designSku}-afacebookfeatured-{$color}.jpg", true, null, 95);
+            $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$designSku}", "{$designSku}-afacebookfeatured-{$color}.jpg", true, null, 85);
         }
     }
 
@@ -152,7 +150,7 @@ class ImageGenerateService
             $watermarkLayer->resizeInPixel(200, null, true);
 
             $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
-            $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$designSku}", "{$designSku}-afeaturedimage-{$color}.jpg", true, null, 95);
+            $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$designSku}", "{$designSku}-afeaturedimage-{$color}.jpg", true, null, 85);
         }
     }
 

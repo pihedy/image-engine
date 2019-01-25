@@ -6,6 +6,7 @@ use App\Lib\Controller;
 use App\Managers\GenerateManager;
 use App\Services\GoogleClientService;
 use App\Services\SpaceService;
+use App\Services\ApiDispatcherService;
 use Automattic\WooCommerce\Client;
 
 /**
@@ -27,79 +28,108 @@ class ApiControllerV1 extends Controller
         /* Getting data from the request. */
         $requestBody = $request->getParsedBody();
 
-        /* Getting friend data. */
-        $friendData = $this->container->get('settings')['friends'][$requestBody['host']];
-
-        $woocommerce = new Client(
-            $friendData['domain'],
-            $friendData['woocommerce']['userKey'],
-            $friendData['woocommerce']['secretKey'],
-            $friendData['woocommerce']['options']
-        );
-
-        $productOrigin = [];
-
-        if (is_array($requestBody['products'])) {
-            foreach ($requestBody['products'] as $value) {
-                $data = $woocommerce->get("products/{$value}");
-
-                $productOrigin[$value] = [
-                    'sku' => $data['sku'],
-                    'attributes' => $data['attributes'],
-                    'metaData' => $data['meta_data'],
-                ];
-            }
+        if (!isset($this->container->get('settings')['friends'][$requestBody['host']])) {
+            return $response->withStatus(400);
+        } else {
+            $friendData = $this->container->get('settings')['friends'][$requestBody['host']];
         }
 
-        $service = new \Google_Service_Drive(
-            GoogleClientService::getClient()
-        );
-
-        foreach ($productOrigin as $key => $value) {
-            foreach ($this->container->get('settings')['imageShades'] as $shadeKey => $shadeValue) {
-                $productOrigin[$key]['imageShades'][$shadeKey] = $value['sku'] . $shadeValue . ".png";
-            }
-        }
-
-        $baseImages = [];
-
-        foreach ($productOrigin as $key => $value) {
-            $dark = $value['imageShades']['dark'];
-            $light = $value['imageShades']['light'];
-
-            $gDriveResponse = $service->files->listFiles([
-                'q' => "mimeType='image/png' and name='{$dark}' or name='{$light}'",
-                'spaces' => 'drive',
-                'fields' => 'nextPageToken, files(id, name)',
-            ]);
-
-            foreach ($gDriveResponse->files as $file) {
-                $baseImages[$file->name] = $file->id;
-            }
-        }
-
-        foreach ($baseImages as $key => $value) {
-            $content = $service->files->get(
-                $value,
-                [
-                    'alt' => 'media'
-                ]
+        try {
+            $woocommerce = new Client(
+                $friendData['domain'],
+                $friendData['woocommerce']['userKey'],
+                $friendData['woocommerce']['secretKey'],
+                $friendData['woocommerce']['options']
             );
+    
+            $productOrigin = [];
+    
+            if (is_array($requestBody['products'])) {
+                foreach ($requestBody['products'] as $value) {
+                    $data = $woocommerce->get("products/{$value}");
+    
+                    $productOrigin[$value] = [
+                        'sku' => $data['sku'],
+                        'attributes' => $data['attributes'],
+                        'metaData' => $data['meta_data'],
+                    ];
 
-            file_put_contents(
-                APP_PATH_ROOT . "/images/design-images/{$key}",
-                $content->getBody()->getContents()
+                    ApiDispatcherService::postInProgress(
+                        $friendData['domain'],
+                        $value,
+                        'WooCommerce data downloaded.'
+                    );
+                }
+            }
+    
+            $service = new \Google_Service_Drive(
+                GoogleClientService::getClient()
             );
+    
+            foreach ($productOrigin as $key => $value) {
+                foreach ($this->container->get('settings')['imageShades'] as $shadeKey => $shadeValue) {
+                    $productOrigin[$key]['imageShades'][$shadeKey] = $value['sku'] . $shadeValue . ".png";
+                }
+            }
+    
+            $baseImages = [];
+    
+            foreach ($productOrigin as $key => $value) {
+                $dark = $value['imageShades']['dark'];
+                $light = $value['imageShades']['light'];
+    
+                $gDriveResponse = $service->files->listFiles([
+                    'q' => "mimeType='image/png' and name='{$dark}' or name='{$light}'",
+                    'spaces' => 'drive',
+                    'fields' => 'nextPageToken, files(id, name)',
+                ]);
+    
+                foreach ($gDriveResponse->files as $file) {
+                    $baseImages[$file->name] = $file->id;
+
+                    ApiDispatcherService::postInProgress(
+                        $friendData['domain'],
+                        $key,
+                        "$file->name image founded and downloaded. (ID: $file->id)."
+                    );
+                }
+            }
+    
+            foreach ($baseImages as $key => $value) {
+                $content = $service->files->get(
+                    $value,
+                    [
+                        'alt' => 'media'
+                    ]
+                );
+    
+                file_put_contents(
+                    APP_PATH_ROOT . "/images/design-images/{$key}",
+                    $content->getBody()->getContents()
+                );
+            }
+    
+            $GenerateManager = new GenerateManager(
+                $productOrigin,
+                $baseImages,
+                $requestBody['host'],
+                $this->container->get('settings')
+            );
+    
+            $GenerateManager->run();
+        } catch (\Exception $e) {
+            return $response->withJson([
+                'message' => $e->getMessage()
+            ], $e->getCode());
+        } catch (\TypeError $e) {
+            return $response->withJson([
+                'message' => $e->getMessage()
+            ], 500);
         }
 
-        $GenerateManager = new GenerateManager(
-            $productOrigin,
-            $baseImages,
-            $requestBody['host'],
-            $this->container->get('settings')
-        );
-
-        $GenerateManager->run();
+        return $response->withJson([
+            'message' => 'ok'
+        ], $statusCode);
     }
 
     /**
@@ -116,59 +146,89 @@ class ApiControllerV1 extends Controller
         /* Getting data from the request. */
         $requestBody = $request->getParsedBody();
 
-        /* Getting friend data. */
-        $friendData = $this->container->get('settings')['friends'][$requestBody['host']];
+        if (!isset($this->container->get('settings')['friends'][$requestBody['host']])) {
+            return $response->withStatus(400);
+        } else {
+            /* Getting friend data. */
+            $friendData = $this->container->get('settings')['friends'][$requestBody['host']];
+        }
 
-        $woocommerce = new Client(
-            $friendData['domain'],
-            $friendData['woocommerce']['userKey'],
-            $friendData['woocommerce']['secretKey'],
-            $friendData['woocommerce']['options']
-        );
+        try {
+            $woocommerce = new Client(
+                $friendData['domain'],
+                $friendData['woocommerce']['userKey'],
+                $friendData['woocommerce']['secretKey'],
+                $friendData['woocommerce']['options']
+            );
+    
+            $productOrigin = [];
+    
+            foreach ($requestBody['base_products'] as $requestKey => $requestValue) {
+                $productData = $woocommerce->get("products/{$requestKey}");
+                $slug = str_replace('-', '_', $productData['slug']);
+                $productVatiations = [];
+                $page = 1;
 
-        $productOrigin = [];
 
-        foreach ($requestBody['base_products'] as $requestKey => $requestValue) {
-            $productData = $woocommerce->get("products/{$requestKey}");
-            $slug = str_replace('-', '_', $productData['slug']);
+                do {
+                    $parameters = [
+                        'per_page' => 99,
+                        'page' => $page
+                    ];
 
-            $parameters = [
-                'per_page' => 99
-            ];
+                    $vatiations = $woocommerce->get("products/{$requestKey}/variations", $parameters);
 
-            $productVatiations = $woocommerce->get("products/{$requestKey}/variations", $parameters);
-            
-            $productOrigin[$requestKey]['slug'] = $slug;
-            $productOrigin[$requestKey]['settings'] = $requestValue;
+                    if (sizeof($vatiations) >= 99) {
+                        $page++;
+                        $retry = true;
+                    } else {
+                        $retry = false;
+                    }
 
-            $iterator = 'none';
+                    $productVatiations = array_merge($productVatiations, $vatiations);
 
-            foreach ($productVatiations as $key => $value) {
-                if ($value['purchasable'] === false) {
-                    continue;
-                }
-
-                parse_str(parse_url($value['permalink'], PHP_URL_QUERY), $query);
-
-                if (isset($query['attribute_pa_szin']) && ($query['attribute_pa_szin'] != $iterator)) {
-                    $productOrigin[$requestKey]['colors'][] = $query['attribute_pa_szin'];
-                    $iterator = $query['attribute_pa_szin'];
+                } while ($retry);
+                
+                $productOrigin[$requestKey]['slug'] = $slug;
+                $productOrigin[$requestKey]['settings'] = $requestValue;
+    
+                $iterator = 'none';
+    
+                foreach ($productVatiations as $key => $value) {
+                    if ($value['purchasable'] === false) {
+                        continue;
+                    }
+    
+                    parse_str(parse_url($value['permalink'], PHP_URL_QUERY), $query);
+    
+                    if (isset($query['attribute_pa_szin']) && ($query['attribute_pa_szin'] != $iterator)) {
+                        $productOrigin[$requestKey]['colors'][] = $query['attribute_pa_szin'];
+                        $iterator = $query['attribute_pa_szin'];
+                    }
                 }
             }
-        }
-
-        if (!file_exists(APP_PATH_ROOT . "/settings/{$requestBody['host']}")) {
-            mkdir(
-                APP_PATH_ROOT . "/settings/{$requestBody['host']}",
-                0755,
-                true
+    
+            if (!file_exists(APP_PATH_ROOT . "/settings/{$requestBody['host']}")) {
+                mkdir(
+                    APP_PATH_ROOT . "/settings/{$requestBody['host']}",
+                    0755,
+                    true
+                );
+            }
+    
+            file_put_contents(
+                APP_PATH_ROOT . "/settings/{$requestBody['host']}/base-products.json",
+                json_encode($productOrigin)
             );
+        } catch (\Exception $e) {
+            return $response->withJson([
+                'message' => $e->getMessage()
+            ], $e->getCode());
         }
 
-        file_put_contents(
-            APP_PATH_ROOT . "/settings/{$requestBody['host']}/base-products.json",
-            json_encode($productOrigin)
-        );
+        return $response->withJson([
+            'message' => 'ok'
+        ], $statusCode);
     }
 
     /**
@@ -185,17 +245,34 @@ class ApiControllerV1 extends Controller
         /* Getting data from the request. */
         $requestBody = $request->getParsedBody();
 
-        if (!file_exists(APP_PATH_ROOT . "/settings/{$requestBody['host']}")) {
-            mkdir(
-                APP_PATH_ROOT . "/settings/{$requestBody['host']}",
-                0755,
-                true
-            );
+        if (!isset($this->container->get('settings')['friends'][$requestBody['host']])) {
+            return $response->withJson(400);
+        } else {
+            /* Getting friend data. */
+            $friendData = $this->container->get('settings')['friends'][$requestBody['host']];
         }
 
-        file_put_contents(
-            APP_PATH_ROOT . "/settings/{$requestBody['host']}/thumbnail-settings.json",
-            json_encode($requestBody['thumbs'])
-        );
+        try {
+            if (!file_exists(APP_PATH_ROOT . "/settings/{$requestBody['host']}")) {
+                mkdir(
+                    APP_PATH_ROOT . "/settings/{$requestBody['host']}",
+                    0755,
+                    true
+                );
+            }
+    
+            file_put_contents(
+                APP_PATH_ROOT . "/settings/{$requestBody['host']}/thumbnail-settings.json",
+                json_encode($requestBody['thumbs'])
+            );
+        } catch (\Exception $e) {
+            return $response->withJson([
+                'message' => $e->getMessage()
+            ], $e->getCode());
+        }
+
+        return $response->withJson([
+            'message' => 'ok'
+        ], $statusCode);
     }
 }

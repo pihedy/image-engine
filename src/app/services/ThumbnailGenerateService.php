@@ -44,7 +44,7 @@ class ThumbnailGenerateService
                 "{$fileValue['filename']}-{$thumbValue['width']}x{$thumbValue['height']}.jpg",
                 true,
                 null,
-                90
+                85
             );
 
             $actualFile = "{$tempPath}/{$fileValue['filename']}-{$thumbValue['width']}x{$thumbValue['height']}.jpg";

@@ -5,6 +5,7 @@ namespace App\Managers;
 use App\Services\ImageGenerateService;
 use App\Services\ThumbnailGenerateService;
 use App\Services\ImageUploadService;
+use App\Services\ApiDispatcherService;
 
 class GenerateManager 
 {
@@ -27,6 +28,7 @@ class GenerateManager
         $this->productOrigin = $productOrigin;
         $this->baseImages = $baseImages;
         $this->friendName = $friendName;
+        $this->settings = $settings;
 
         $this->baseProductSettings = json_decode(
             file_get_contents(APP_PATH_ROOT . "/settings/{$friendName}/base-products.json"),
@@ -48,22 +50,55 @@ class GenerateManager
 
     public function run()
     {
+        $host = $this->settings['friends'][$this->friendName]['domain'];
+
         foreach ($this->productOrigin as $productKey => $productValue) {
-            ImageGenerateService::generateImages(
-                $productValue, 
-                $this->baseImages, 
-                $this->baseProductSettings
-            );
+            try {
+                ImageGenerateService::generateImages(
+                    $productValue, 
+                    $this->baseImages, 
+                    $this->baseProductSettings
+                );
 
-            ThumbnailGenerateService::generateThumbnails(
-                $productValue,
-                $this->thumbnailSettings
-            );
+                ApiDispatcherService::postInProgress(
+                    $host,
+                    $productKey,
+                    'All images generated.'
+                );
+    
+                ThumbnailGenerateService::generateThumbnails(
+                    $productValue,
+                    $this->thumbnailSettings
+                );
 
-            /* ImageUploadService::uploadFiles(
-                $productValue,
-                $this->SpaceConnect
-            ); */
+                ApiDispatcherService::postInProgress(
+                    $host,
+                    $productKey,
+                    'All thumbnails generated.'
+                );
+    
+                ImageUploadService::uploadFiles(
+                    $productValue,
+                    $this->SpaceConnect,
+                    $this->friendName
+                );
+
+                ApiDispatcherService::postInProgress(
+                    $host,
+                    $productKey,
+                    'All the files were uploaded to the cloud.',
+                    201
+                );
+            } catch (\Exception $e) {
+                ApiDispatcherService::postInProgress(
+                    $host,
+                    $productKey,
+                    $e->getMessage(),
+                    $e->getCode()
+                );
+
+                continue;
+            }
         }
     }
 }
