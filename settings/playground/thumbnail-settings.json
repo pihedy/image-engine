@@ -1,1 +1,30 @@
-{"large":{"width":1024,"height":1024},"medium_large":{"width":768,"height":768},"medium":{"width":300,"height":300},"thumbnail":{"width":150,"height":150}}
+{
+    "large": {
+        "width": 1024,
+        "height": 1024
+    },
+    "medium_large": {
+        "width": 768,
+        "height": 768
+    },
+    "medium_upper": {
+        "width": 416,
+        "height": 416
+    },
+    "medium_middle": {
+        "width": 324,
+        "height": 324
+    },
+    "medium": {
+        "width": 300,
+        "height": 300
+    },
+    "thumbnail": {
+        "width": 150,
+        "height": 150
+    },
+    "thumbnail_small": {
+        "width": 100,
+        "height": 100
+    }
+}

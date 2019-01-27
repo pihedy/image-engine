@@ -59,6 +59,14 @@ class GenerateManager
                     $this->baseImages, 
                     $this->baseProductSettings
                 );
+                ImageGenerateService::generateFacebookFeatured(
+                    $productValue,
+                    $this->baseImages
+                );
+                ImageGenerateService::generateFeatured(
+                    $productValue,
+                    $this->baseImages
+                );
 
                 ApiDispatcherService::postInProgress(
                     $host,

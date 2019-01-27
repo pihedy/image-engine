@@ -97,7 +97,7 @@ class ImageGenerateService
                         "{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg", 
                         true, 
                         null, 
-                        85
+                        90
                     );
 
                     $actualFile = "{$tempPath}/{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg";
@@ -106,52 +106,61 @@ class ImageGenerateService
                         $actualFile
                     ); */
                 }
-
-                self::generateFacebookFeatured(
-                    $designSku,
-                    $imageName,
-                    $shadeFolder,
-                    $colorValue
-                );
-
-                self::generateFeatured(
-                    $designSku,
-                    $imageName,
-                    $shadeFolder,
-                    $colorValue
-                );
             }
         }
     }
 
-    private static function generateFacebookFeatured(string $designSku, string $imageName, string $shadeFolder, string $color)
+    public static function generateFacebookFeatured(array $productValue, array $baseImages)
     {
-        $featuredFile = APP_PATH_ROOT . "/images/base-images/afacebookfeatured/{$shadeFolder}/afacebookfeatured-{$color}.jpg";
+        $mainColor = self::getMainColor($productValue['metaData']);
 
-        if (file_exists($featuredFile)) {
-            $norwayLayer = ImageWorkshop::initFromPath($featuredFile);
+        foreach ($productValue['imageShades'] as $shadeKey => $shadeValue) {
+            if (!array_key_exists($shadeValue, $baseImages)) {
+                continue;
+            }
 
-            $watermarkLayer = ImageWorkshop::initFromPath(APP_PATH_ROOT . "/images/design-images/{$imageName}");
-            $watermarkLayer->resizeInPixel(500, null, true);
+            $featuredFile = APP_PATH_ROOT . "/images/base-images/afacebookfeatured/{$shadeKey}/afacebookfeatured-{$mainColor}.jpg";
 
-            $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
-            $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$designSku}", "{$designSku}-afacebookfeatured-{$color}.jpg", true, null, 85);
+            if (file_exists($featuredFile)) {
+                $norwayLayer = ImageWorkshop::initFromPath($featuredFile);
+    
+                $watermarkLayer = ImageWorkshop::initFromPath(APP_PATH_ROOT . "/images/design-images/{$shadeValue}");
+                $watermarkLayer->resizeInPixel(500, null, true);
+    
+                $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
+                $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$productValue['sku']}", "{$productValue['sku']}-afacebookfeatured-{$mainColor}.jpg", true, null, 90);
+            }
         }
     }
 
-    private static function generateFeatured(string $designSku, string $imageName, string $shadeFolder, string $color)
+    public static function generateFeatured(array $productValue, array $baseImages)
     {
-        $featuredFile = APP_PATH_ROOT . "/images/base-images/afeaturedimage/{$shadeFolder}/afeaturedimage-{$color}.jpg";
+        $mainColor = self::getMainColor($productValue['metaData']);
 
-        if (file_exists($featuredFile)) {
-            $norwayLayer = ImageWorkshop::initFromPath($featuredFile);
+        foreach ($productValue['imageShades'] as $shadeKey => $shadeValue) {
+            if (!array_key_exists($shadeValue, $baseImages)) {
+                continue;
+            }
 
-            $watermarkLayer = ImageWorkshop::initFromPath(APP_PATH_ROOT . "/images/design-images/{$imageName}");
-            $watermarkLayer->resizeInPixel(200, null, true);
+            $featuredFile = APP_PATH_ROOT . "/images/base-images/afeaturedimage/{$shadeKey}/afeaturedimage-{$mainColor}.jpg";
 
-            $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
-            $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$designSku}", "{$designSku}-afeaturedimage-{$color}.jpg", true, null, 85);
+            if (file_exists($featuredFile)) {
+                $norwayLayer = ImageWorkshop::initFromPath($featuredFile);
+    
+                $watermarkLayer = ImageWorkshop::initFromPath(APP_PATH_ROOT . "/images/design-images/{$shadeValue}");
+                $watermarkLayer->resizeInPixel(300, null, true);
+    
+                $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
+                $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$productValue['sku']}", "{$productValue['sku']}-afeaturedimage-{$mainColor}.jpg", true, null, 90);
+            }
         }
+    }
+
+    private static function getMainColor(array $metaData)
+    {
+        $metaKey = array_search('_isabel_main_variable', array_column($metaData, 'key'));
+
+        return $metaData[$metaKey]['value'];
     }
 
     private static function normalize(string $string)
