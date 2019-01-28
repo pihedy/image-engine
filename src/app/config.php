@@ -18,8 +18,8 @@ return [
             'secretKey' => 'asdf123',
             'domain' => 'http://playground.io',
             'woocommerce' => [
-                'userKey' => 'ck_854687b5115eeb9c214c6e3e091d893f9b61fe78',
-                'secretKey' => 'cs_baa1c56396a97f50c5356f334c1ae3972af6949f',
+                'userKey' => 'ck_822a7253c95fa4da68f6496c0a53530ef1422c41',
+                'secretKey' => 'cs_f5da4a8e5a479ea29157f0418a50f943a1b0ed93',
                 'options' => [
                     'wp_api' => true,
                     'version' => 'wc/v2',

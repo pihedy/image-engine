@@ -80,24 +80,23 @@ class ImageGenerateService
                 continue;
             }
 
+            $counter = 1;
             foreach ($baseValue['colors'] as $colorKey => $colorValue) {
+                $scriptLocation = APP_PATH_ROOT . '/scripts/tshirt.sh';
                 $templateFile = APP_PATH_ROOT . "/images/base-images/{$baseValue['slug']}/{$shadeFolder}/{$baseValue['slug']}-{$colorValue}.jpg";
+                $designFile = APP_PATH_ROOT . "/images/design-images/{$imageName}";
                 $tempPath = APP_PATH_ROOT . "/tmp/{$designSku}";
+                $settings = $baseValue['settings'];
+
+                $actualOption = "{$settings['sampleWidth']}x{$settings['sampleHeight']}+{$settings['shiftLeft']}+{$settings['shiftTop']}";
 
                 if (file_exists($templateFile)) {
-                    $norwayLayer = ImageWorkshop::initFromPath($templateFile);
-                    $norwayLayer->resizeInPixel(1000, null, true);
+                    $outputFile = "{$tempPath}/{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg";
 
-                    $watermarkLayer = ImageWorkshop::initFromPath(APP_PATH_ROOT . "/images/design-images/{$imageName}");
-                    $watermarkLayer->resizeInPixel(200, null, true);
+                    $export = $counter === 1 ? '-E' : '';
 
-                    $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
-                    $norwayLayer->save(
-                        $tempPath, 
-                        "{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg", 
-                        true, 
-                        null, 
-                        90
+                    exec(
+                        "{$scriptLocation} -r \"{$actualOption}\" -o 5,0 {$export} {$designFile} {$templateFile} {$outputFile}"
                     );
 
                     $actualFile = "{$tempPath}/{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg";
@@ -105,6 +104,8 @@ class ImageGenerateService
                     /* ImageManager::compression(
                         $actualFile
                     ); */
+
+                    $counter++;
                 }
             }
         }
