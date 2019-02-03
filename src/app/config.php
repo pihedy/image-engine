@@ -7,8 +7,8 @@ return [
         'light' => '_L',
     ],
     'space' => [
-        'key' => 'PEI4PBQQQDBWQ23KXCOT',
-        'secret'=> 'Bk0Ta0nVJ/TdNJjIoL0ACRiz8MdoZMKBJq3D4/epwmY',
+        'key' => 'W5TRVTDB2CBPZF4J5VSE',
+        'secret'=> 'ReJWjp5O1vLY79d1DcloUXqeJKwafYz6Qud1oguLJrM',
         'name' => 'isabel',
         'region' => 'ams3'
     ],

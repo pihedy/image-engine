@@ -68,6 +68,10 @@ class GenerateManager
                     $this->baseImages
                 );
 
+                /* ImageManager::compression(
+                    APP_PATH_ROOT . "/tmp/{$productValue['sku']}/"
+                ); */
+
                 ApiDispatcherService::postInProgress(
                     $host,
                     $productKey,

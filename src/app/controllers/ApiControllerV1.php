@@ -8,6 +8,7 @@ use App\Services\GoogleClientService;
 use App\Services\SpaceService;
 use App\Services\ApiDispatcherService;
 use Automattic\WooCommerce\Client;
+use PHPImageWorkshop\ImageWorkshop;
 
 /**
  * Api v1 controller class.
@@ -107,6 +108,21 @@ class ApiControllerV1 extends Controller
                     APP_PATH_ROOT . "/images/design-images/{$key}",
                     $content->getBody()->getContents()
                 );
+
+                if (file_exists(APP_PATH_ROOT . "/images/design-images/{$key}")) {
+                    $design = ImageWorkshop::initFromPath(
+                        APP_PATH_ROOT . "/images/design-images/{$key}"
+                    );
+
+                    $design->resizeInPixel(800, null, true);
+                    $design->save(
+                        APP_PATH_ROOT . "/images/design-images/", 
+                        $key,
+                        false,
+                        null,
+                        80
+                    );
+                }
             }
     
             $GenerateManager = new GenerateManager(

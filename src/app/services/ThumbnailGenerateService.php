@@ -33,7 +33,7 @@ class ThumbnailGenerateService
             $layer->resizeInPixel(
                 $thumbValue['width'],
                 $thumbValue['height'],
-                true,
+                false,
                 0,
                 0,
                 'MM'

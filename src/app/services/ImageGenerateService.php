@@ -80,11 +80,11 @@ class ImageGenerateService
                 continue;
             }
 
-            $counter = 1;
             foreach ($baseValue['colors'] as $colorKey => $colorValue) {
                 $scriptLocation = APP_PATH_ROOT . '/scripts/tshirt.sh';
                 $templateFile = APP_PATH_ROOT . "/images/base-images/{$baseValue['slug']}/{$shadeFolder}/{$baseValue['slug']}-{$colorValue}.jpg";
                 $designFile = APP_PATH_ROOT . "/images/design-images/{$imageName}";
+                $exportPath = APP_PATH_ROOT . "/tmp/export/{$baseValue['slug']}";
                 $tempPath = APP_PATH_ROOT . "/tmp/{$designSku}";
                 $settings = $baseValue['settings'];
 
@@ -92,20 +92,11 @@ class ImageGenerateService
 
                 if (file_exists($templateFile)) {
                     $outputFile = "{$tempPath}/{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg";
-
-                    $export = $counter === 1 ? '-E' : '';
+                    $export = file_exists($exportPath) ? '' : '-E';
 
                     exec(
-                        "{$scriptLocation} -r \"{$actualOption}\" -o 5,0 {$export} {$designFile} {$templateFile} {$outputFile}"
+                        "{$scriptLocation} -r \"{$actualOption}\" -b 3 -a 0 -A 5 -o 5,0 {$export} -D {$exportPath} {$designFile} {$templateFile} {$outputFile}"
                     );
-
-                    $actualFile = "{$tempPath}/{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg";
-
-                    /* ImageManager::compression(
-                        $actualFile
-                    ); */
-
-                    $counter++;
                 }
             }
         }
