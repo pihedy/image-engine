@@ -68,10 +68,6 @@ class GenerateManager
                     $this->baseImages
                 );
 
-                /* ImageManager::compression(
-                    APP_PATH_ROOT . "/tmp/{$productValue['sku']}/"
-                ); */
-
                 ApiDispatcherService::postInProgress(
                     $host,
                     $productKey,
@@ -87,6 +83,16 @@ class GenerateManager
                     $host,
                     $productKey,
                     'All thumbnails generated.'
+                );
+
+                ImageManager::compression(
+                    APP_PATH_ROOT . "/tmp/{$productValue['sku']}/"
+                );
+
+                ApiDispatcherService::postInProgress(
+                    $host,
+                    $productKey,
+                    'All images optimalized.'
                 );
     
                 ImageUploadService::uploadFiles(

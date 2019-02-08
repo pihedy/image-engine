@@ -73,8 +73,6 @@ class ImageGenerateService
 
     private static function imagesComposite(string $shadeFolder, string $imageName, string $designSku, array $baseData)
     {
-        set_time_limit(0);
-
         foreach ($baseData as $baseKey => $baseValue) {
             if (!isset($baseValue['colors'])) {
                 continue;
@@ -93,9 +91,16 @@ class ImageGenerateService
                 if (file_exists($templateFile)) {
                     $outputFile = "{$tempPath}/{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg";
                     $export = file_exists($exportPath) ? '' : '-E';
+                    list($width, $height) = getimagesize($designFile);
+
+                    if ($width >= $height) {
+                        $fit = '';
+                    } else {
+                        $fit = '-f scale';
+                    }
 
                     exec(
-                        "{$scriptLocation} -r \"{$actualOption}\" -b 3 -a 0 -A 5 -o 5,0 {$export} -D {$exportPath} {$designFile} {$templateFile} {$outputFile}"
+                        "{$scriptLocation} -r \"{$actualOption}\" {$fit} -b 3 -a 0 -A 5 -o 5,0 {$export} -D {$exportPath} {$designFile} {$templateFile} {$outputFile}"
                     );
                 }
             }
@@ -114,13 +119,17 @@ class ImageGenerateService
             $featuredFile = APP_PATH_ROOT . "/images/base-images/afacebookfeatured/{$shadeKey}/afacebookfeatured-{$mainColor}.jpg";
 
             if (file_exists($featuredFile)) {
-                $norwayLayer = ImageWorkshop::initFromPath($featuredFile);
-    
-                $watermarkLayer = ImageWorkshop::initFromPath(APP_PATH_ROOT . "/images/design-images/{$shadeValue}");
-                $watermarkLayer->resizeInPixel(500, null, true);
-    
-                $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
-                $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$productValue['sku']}", "{$productValue['sku']}-afacebookfeatured-{$mainColor}.jpg", true, null, 90);
+                $tempPath = APP_PATH_ROOT . "/tmp/{$productValue['sku']}";
+                $designFile = APP_PATH_ROOT . "/images/design-images/{$shadeValue}";
+                $outputFile = "{$tempPath}/{$productValue['sku']}-afacebookfeatured-{$mainColor}.jpg";
+                $exportPath = APP_PATH_ROOT . "/tmp/export/afacebookfeatured";
+
+                $scriptLocation = APP_PATH_ROOT . '/scripts/tshirt.sh';
+                $export = file_exists($exportPath) ? '' : '-E';
+
+                exec(
+                    "{$scriptLocation} -r \"847x947+796+184\" -f scale -b 3 -a 0 -A 5 -o 5,0 {$export} -D {$exportPath} {$designFile} {$featuredFile} {$outputFile}"
+                );
             }
         }
     }
@@ -137,13 +146,17 @@ class ImageGenerateService
             $featuredFile = APP_PATH_ROOT . "/images/base-images/afeaturedimage/{$shadeKey}/afeaturedimage-{$mainColor}.jpg";
 
             if (file_exists($featuredFile)) {
-                $norwayLayer = ImageWorkshop::initFromPath($featuredFile);
-    
-                $watermarkLayer = ImageWorkshop::initFromPath(APP_PATH_ROOT . "/images/design-images/{$shadeValue}");
-                $watermarkLayer->resizeInPixel(300, null, true);
-    
-                $norwayLayer->addLayerOnTop($watermarkLayer, 0, 0, "MM");
-                $norwayLayer->save(APP_PATH_ROOT . "/tmp/{$productValue['sku']}", "{$productValue['sku']}-afeaturedimage-{$mainColor}.jpg", true, null, 90);
+                $tempPath = APP_PATH_ROOT . "/tmp/{$productValue['sku']}";
+                $designFile = APP_PATH_ROOT . "/images/design-images/{$shadeValue}";
+                $outputFile = "{$tempPath}/{$productValue['sku']}-afeaturedimage-{$mainColor}.jpg";
+                $exportPath = APP_PATH_ROOT . "/tmp/export/afeaturedimage";
+
+                $scriptLocation = APP_PATH_ROOT . '/scripts/tshirt.sh';
+                $export = file_exists($exportPath) ? '' : '-E';
+
+                exec(
+                    "{$scriptLocation} -r \"640x800+80+0\" -f scale -b 3 -a 0 -A 5 -o 5,0 {$export} -D {$exportPath} {$designFile} {$featuredFile} {$outputFile}"
+                );
             }
         }
     }

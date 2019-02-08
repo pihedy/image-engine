@@ -22,7 +22,6 @@ class ThumbnailGenerateService
 
     private static function generate(string $folder, array $fileValue, array $thumbnailSettings)
     {
-        set_time_limit(0);
         $tempPath = APP_PATH_ROOT . "/tmp/{$folder}";
 
         foreach ($thumbnailSettings as $thumbKey => $thumbValue) {
@@ -30,28 +29,25 @@ class ThumbnailGenerateService
                 APP_PATH_ROOT . "/tmp/{$folder}/{$fileValue['basename']}"
             );
 
-            $layer->resizeInPixel(
-                $thumbValue['width'],
-                $thumbValue['height'],
-                false,
-                0,
-                0,
-                'MM'
-            );
+            if ($thumbValue['height'] > $thumbValue['width']) {
+                $layer->resizeInPixel($thumbValue['height'], $thumbValue['height'], true, 0, 0, 'MM');
+                $layer->cropInPixel($thumbValue['width'], $thumbValue['height'], 0, 0, 'MM');
+            } elseif ($thumbValue['height'] < $thumbValue['width']) {
+                $layer->resizeInPixel($thumbValue['width'], $thumbValue['width'], true, 0, 0, 'MM');
+                $layer->cropInPixel($thumbValue['width'], $thumbValue['height'], 0, 0, 'MM');
+            } else {
+                $layer->resizeInPixel($thumbValue['width'], $thumbValue['height'], true, 0, 0, 'MM');
+            }
 
             $layer->save(
                 $tempPath,
                 "{$fileValue['filename']}-{$thumbValue['width']}x{$thumbValue['height']}.jpg",
                 true,
                 null,
-                90
+                99
             );
 
             $actualFile = "{$tempPath}/{$fileValue['filename']}-{$thumbValue['width']}x{$thumbValue['height']}.jpg";
-
-            /* ImageManager::compression(
-                $actualFile
-            ); */
         }
     }
 }

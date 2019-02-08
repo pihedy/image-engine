@@ -29,13 +29,17 @@ class ApiControllerV1 extends Controller
         /* Getting data from the request. */
         $requestBody = $request->getParsedBody();
 
+        /* If you are not a friend then immediately return. */
         if (!isset($this->container->get('settings')['friends'][$requestBody['host']])) {
             return $response->withStatus(400);
         } else {
             $friendData = $this->container->get('settings')['friends'][$requestBody['host']];
         }
 
+        /* Trying to generate products begins. */
         try {
+
+            /* Create a friend-side woocommerce connection. */
             $woocommerce = new Client(
                 $friendData['domain'],
                 $friendData['woocommerce']['userKey'],
@@ -44,23 +48,68 @@ class ApiControllerV1 extends Controller
             );
     
             $productOrigin = [];
-    
-            if (is_array($requestBody['products'])) {
-                foreach ($requestBody['products'] as $value) {
-                    $data = $woocommerce->get("products/{$value}");
-    
-                    $productOrigin[$value] = [
-                        'sku' => $data['sku'],
-                        'attributes' => $data['attributes'],
-                        'metaData' => $data['meta_data'],
-                    ];
 
-                    ApiDispatcherService::postInProgress(
-                        $friendData['domain'],
-                        $value,
-                        'WooCommerce data downloaded.'
+            /* Here's what the fate of generation is about. One time, all generations, or errors. */
+            if (is_array($requestBody['products'])) {
+                $products = $requestBody['products'];
+            } elseif ($requestBody['products'] === 'all') {
+
+                /* Introducing the offset file. */
+                $offsetFile = APP_PATH_ROOT . "/tmp/{$requestBody['host']}_offset.log";
+                $offset = file_exists($offsetFile) ? file_get_contents($offsetFile) : 0;
+
+                /* Requires the current series from product identifiers. */
+                $client = new \GuzzleHttp\Client();
+                $res = $client->request(
+                    'GET', 
+                    "{$friendData['domain']}/wp-json/isabel/v1/get_all_product_id/",
+                    [
+                        'query' => [
+                            'offset' => $offset
+                        ]
+                    ]
+                );
+
+                /* If something goes wrong, you will return to the message. */
+                if ($res->getStatusCode() !== 200) {
+                    throw new \Exception(
+                        "An error occurred while dropping 'get_all_product_id'.", 
+                        $res->getStatusCode()
                     );
                 }
+
+                /* Alternatively, it decodes the received data. */
+                $products = json_decode($res->getBody()->getContents());
+
+                /* Creates the offset file according to the condition. */
+                if (file_exists($offsetFile)) {
+                    $offset = file_get_contents($offsetFile);
+                    $offset += sizeof($products);
+
+                    file_put_contents($offsetFile, $offset);
+                } else {
+                    file_put_contents($offsetFile, sizeof($products));
+                }
+            } else {
+
+                /* If something is wrong with the data you received. */
+                throw new \Exception('Wrong products data.', 500);
+            }
+    
+            foreach ($products as $value) {
+                $data = $woocommerce->get("products/{$value}");
+
+                $productOrigin[$value] = [
+                    'sku' => $data['sku'],
+                    'attributes' => $data['attributes'],
+                    'metaData' => $data['meta_data'],
+                ];
+
+                ApiDispatcherService::postInProgress(
+                    $friendData['domain'],
+                    $value,
+                    'WooCommerce data downloaded.'
+                );
             }
     
             $service = new \Google_Service_Drive(
@@ -133,6 +182,20 @@ class ApiControllerV1 extends Controller
             );
     
             $GenerateManager->run();
+
+            if (sizeof($products) === 50) {
+                $client = new \GuzzleHttp\Client();
+                $res = $client->request('GET', "{$friendData['domain']}/wp-json/isabel/v1/get_isabel_ping/");
+
+                if ($res->getStatusCode() !== 200) {
+                    throw new \Exception(
+                        "An error occurred while dropping 'get_next_ping'.", 
+                        $res->getStatusCode()
+                    );
+                }
+            } else {
+                unlink($offsetFile);
+            }
         } catch (\Exception $e) {
             return $response->withJson([
                 'message' => $e->getMessage()
@@ -227,7 +290,7 @@ class ApiControllerV1 extends Controller
             if (!file_exists(APP_PATH_ROOT . "/settings/{$requestBody['host']}")) {
                 mkdir(
                     APP_PATH_ROOT . "/settings/{$requestBody['host']}",
-                    0755,
+                    0777,
                     true
                 );
             }
@@ -239,7 +302,7 @@ class ApiControllerV1 extends Controller
         } catch (\Exception $e) {
             return $response->withJson([
                 'message' => $e->getMessage()
-            ], $e->getCode());
+            ], 500);
         }
 
         return $response->withJson([
