@@ -54,6 +54,17 @@ class GenerateManager
 
         foreach ($this->productOrigin as $productKey => $productValue) {
             try {
+                /* if (!$this->imageIntersect($productValue['imageShades'], $this->baseImages)) {
+                    ApiDispatcherService::postInProgress(
+                        $host,
+                        $productKey,
+                        'No shade image found on Drive.',
+                        404
+                    );
+
+                    continue;
+                } */
+
                 ImageGenerateService::generateImages(
                     $productValue, 
                     $this->baseImages, 
@@ -107,6 +118,9 @@ class GenerateManager
                     'All the files were uploaded to the cloud.',
                     201
                 );
+
+                $dirPath = APP_PATH_ROOT . "/tmp/{$productValue['sku']}";
+                exec("rm -rf {$dirPath}");
             } catch (\Exception $e) {
                 ApiDispatcherService::postInProgress(
                     $host,
@@ -115,8 +129,34 @@ class GenerateManager
                     $e->getCode()
                 );
 
+                $dirPath = APP_PATH_ROOT . "/tmp/{$productValue['sku']}";
+                exec("rm -rf {$dirPath}");
+
                 continue;
             }
         }
+    }
+
+    /**
+     * imageIntersect
+     * @return bool 
+     */
+    private function imageIntersect(array $imageIntersect, array $baseImages)
+    {
+        $avalibleImages = [];
+
+        foreach ($imageShades as $imageKey => $imageValue) {
+            if (array_key_exists($imageValue, $baseImages)) {
+                $avalibleImages[] = $imageValue;
+            }
+        }
+
+        if (sizeof($avalibleImages) == 0) {
+            $return = false;
+        } else {
+            $return = true;
+        }
+
+        return $return;
     }
 }

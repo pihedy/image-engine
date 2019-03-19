@@ -86,25 +86,46 @@ class ImageGenerateService
                 $tempPath = APP_PATH_ROOT . "/tmp/{$designSku}";
                 $settings = $baseValue['settings'];
 
-                $actualOption = "{$settings['sampleWidth']}x{$settings['sampleHeight']}+{$settings['shiftLeft']}+{$settings['shiftTop']}";
-
                 if (file_exists($templateFile)) {
                     $outputFile = "{$tempPath}/{$designSku}-{$baseValue['slug']}-{$colorValue}.jpg";
                     $export = file_exists($exportPath) ? '' : '-E';
-                    list($width, $height) = getimagesize($designFile);
 
-                    if ($width >= $height) {
-                        $fit = '';
-                    } else {
-                        $fit = '-f scale';
-                    }
+                    list($width, $height) = getimagesize($designFile);
+                    $rates = self::calculateDesignScale(
+                        [
+                            'width' => $width,
+                            'height' => $height,
+                        ],
+                        [
+                            'width' => $settings['sampleWidth'],
+                            'height' => $settings['sampleHeight'],
+                        ],
+                        [
+                            'left' => $settings['shiftLeft'],
+                            'top' => $settings['shiftTop']
+                        ]
+                    );
 
                     exec(
-                        "{$scriptLocation} -r \"{$actualOption}\" {$fit} -b 3 -a 0 -A 5 -o 5,0 {$export} -D {$exportPath} {$designFile} {$templateFile} {$outputFile}"
+                        "{$scriptLocation} -r \"{$rates}\" -b 3 -a 0 -A 5 -o 5,0 {$export} -D {$exportPath} {$designFile} {$templateFile} {$outputFile}"
                     );
                 }
             }
         }
+    }
+
+    private static function calculateDesignScale(array $designRates, array $areaRates, array $shift)
+    {
+        $actualWidth = round(($designRates['width'] / $designRates['height']) * $areaRates['height']);
+
+        if ($actualWidth >= $areaRates['width']) {
+            $rate = "{$areaRates['width']}x{$areaRates['height']}+{$shift['left']}+{$shift['top']}";
+        } else {
+            $actualLeft = round((($areaRates['width'] - $actualWidth) / 2) + $shift['left']);
+            $rate = "{$actualWidth}x{$areaRates['height']}+{$actualLeft}+{$shift['top']}";
+        }
+
+        return $rate;
     }
 
     public static function generateFacebookFeatured(array $productValue, array $baseImages)

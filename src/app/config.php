@@ -49,6 +49,30 @@ return [
                     'version' => 'wc/v2',
                 ]
             ]
+                ],
+        'teetaku' => [
+            'secretKey' => '123456',
+            'domain' => 'https://teetaku.hu',
+            'woocommerce' => [
+                'userKey' => 'ck_0c61056ec834947fda49f306800826446b78a3dc',
+                'secretKey' => 'cs_e6c775e402c0a7c296844c89c0b53c9bc6dcf0e8',
+                'options' => [
+                    'wp_api' => true,
+                    'version' => 'wc/v2',
+                ]
+            ]
+        ],
+        'pamutlabor' => [
+            'secretKey' => '123456',
+            'domain' => 'https://pamutlabor.hu',
+            'woocommerce' => [
+                'userKey' => 'ck_d18cfecfee6ef99b816e4372572e53a1fb1defe8',
+                'secretKey' => 'cs_976101eee72ba51390daf443ea208d93afff8186',
+                'options' => [
+                    'wp_api' => true,
+                    'version' => 'wc/v2',
+                ]
+            ]
         ]
     ]
 ];
