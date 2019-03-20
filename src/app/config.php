@@ -13,13 +13,12 @@ return [
         'region' => 'ams3'
     ],
     'friends' => [
-        'pamutlabor' => [],
         'playground' => [
             'secretKey' => 'asdf123',
             'domain' => 'http://playground.io',
             'woocommerce' => [
-                'userKey' => 'ck_822a7253c95fa4da68f6496c0a53530ef1422c41',
-                'secretKey' => 'cs_f5da4a8e5a479ea29157f0418a50f943a1b0ed93',
+                'userKey' => 'ck_6802a9cf1426b1797891b4a4f78cae521790ba90',
+                'secretKey' => 'cs_a755a3798a9b9b752ec295a541d0d21e48f28643',
                 'options' => [
                     'wp_api' => true,
                     'version' => 'wc/v2',
@@ -40,10 +39,10 @@ return [
         ],
         'teetakuStaging' => [
             'secretKey' => '123456',
-            'domain' => 'https://staging-teetaku.kinsta.com',
+            'domain' => 'http://staging-teetaku.kinsta.cloud',
             'woocommerce' => [
-                'userKey' => 'ck_ebba4d21a3fa0d12c5a0a0f865f75a26fa656cd1',
-                'secretKey' => 'cs_723b31c7c2a476cd32c75d8b8c44ea635d56ad2f',
+                'userKey' => 'ck_6b960ab4fb14735d6032c4168d90cffc67c60d06',
+                'secretKey' => 'cs_343b490d3b1ce15f7146bfefb3d54da0b562ab4d',
                 'options' => [
                     'wp_api' => true,
                     'version' => 'wc/v2',

@@ -9,11 +9,16 @@ use Amp\Promise;
 
 class ImageGenerateService
 {
+    public static $galleryArray;
+
     public static function generateImages(array $productValue, array $baseImages, array $baseProducts)
     {
         $productValue['colors'] = self::cleanColors($productValue['attributes']);
         $productValue['basics'] = self::cleanBasics($productValue['metaData']);
         $productValue['baseIntersect'] = array_intersect_key($baseProducts, array_flip($productValue['basics']));
+        $productValue['gallery'] = self::cleanGallery($productValue['metaData']);
+
+        $productValue['insertRequired'] = self::insertRequired($productValue['metaData']);
 
         foreach ($productValue['baseIntersect'] as $baseKey => $baseValue) {
             if (!isset($baseValue['colors'])) {
@@ -44,7 +49,9 @@ class ImageGenerateService
                 $imageKey,
                 $imageValue,
                 $productValue['sku'],
-                $productValue['baseIntersect']
+                $productValue['baseIntersect'],
+                $productValue['gallery'],
+                $productValue['insertRequired']
             );
         }
     }
@@ -71,7 +78,36 @@ class ImageGenerateService
         return $return;
     }
 
-    private static function imagesComposite(string $shadeFolder, string $imageName, string $designSku, array $baseData)
+    private static function cleanGallery(array $meta)
+    {
+        $metaKey = array_search('pamut_design_gallery', array_column($meta, 'key'));
+
+        return $metaKey === false ? [] : $meta[$metaKey]['value'];
+    }
+
+    private static function insertRequired(array $meta)
+    {
+        $metaKey = array_search('isabel_insert_required', array_column($meta, 'key'));
+
+        if ($metaKey === false) {
+            $return = false;
+        } else if ($meta[$metaKey]['value'] == 'true') {
+            $return = true;
+        } else {
+            $return = false;
+        }
+
+        return $return;
+    }
+
+    private static function imagesComposite(
+        string $shadeFolder, 
+        string $imageName, 
+        string $designSku, 
+        array $baseData, 
+        array $gallery,
+        bool $insertRequired
+    )
     {
         foreach ($baseData as $baseKey => $baseValue) {
             if (!isset($baseValue['colors'])) {
@@ -79,6 +115,10 @@ class ImageGenerateService
             }
 
             foreach ($baseValue['colors'] as $colorKey => $colorValue) {
+                if (($insertRequired === true) && (array_key_exists("{$baseValue['slug']}-{$colorValue}", $gallery))) {
+                    continue;
+                }
+
                 $scriptLocation = APP_PATH_ROOT . '/scripts/tshirt.sh';
                 $templateFile = APP_PATH_ROOT . "/images/base-images/{$baseValue['slug']}/{$shadeFolder}/{$baseValue['slug']}-{$colorValue}.jpg";
                 $designFile = APP_PATH_ROOT . "/images/design-images/{$imageName}";
