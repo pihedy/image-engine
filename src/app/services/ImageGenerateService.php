@@ -122,7 +122,7 @@ class ImageGenerateService
                 $scriptLocation = APP_PATH_ROOT . '/scripts/tshirt.sh';
                 $templateFile = APP_PATH_ROOT . "/images/base-images/{$baseValue['slug']}/{$shadeFolder}/{$baseValue['slug']}-{$colorValue}.jpg";
                 $designFile = APP_PATH_ROOT . "/images/design-images/{$imageName}";
-                $exportPath = APP_PATH_ROOT . "/tmp/export/{$baseValue['slug']}";
+                $exportPath = APP_PATH_ROOT . "/tmp/export/{$baseValue['slug']}-{$colorValue}";
                 $tempPath = APP_PATH_ROOT . "/tmp/{$designSku}";
                 $settings = $baseValue['settings'];
 
@@ -131,23 +131,51 @@ class ImageGenerateService
                     $export = file_exists($exportPath) ? '' : '-E';
 
                     list($width, $height) = getimagesize($designFile);
-                    $rates = self::calculateDesignScale(
-                        [
-                            'width' => $width,
-                            'height' => $height,
-                        ],
-                        [
-                            'width' => $settings['sampleWidth'],
-                            'height' => $settings['sampleHeight'],
-                        ],
-                        [
-                            'left' => $settings['shiftLeft'],
-                            'top' => $settings['shiftTop']
-                        ]
-                    );
+                    $fullCenterSlugs = [
+                        'parnahuzat',
+                        'tornazsak',
+                        'premium_vaszontaska',
+                        'vaszontaska',
+                        'szines_bogre',
+                        'bogre'
+                    ];
+
+                    if (in_array($baseValue['slug'], $fullCenterSlugs)) {
+                        $options = '-l -50 -a 0 -A 5 -o 5,0';
+                        $rates = self::calculateFullCenter(
+                            [
+                                'width' => $width,
+                                'height' => $height,
+                            ],
+                            [
+                                'width' => $settings['sampleWidth'],
+                                'height' => $settings['sampleHeight'],
+                            ],
+                            [
+                                'left' => $settings['shiftLeft'],
+                                'top' => $settings['shiftTop']
+                            ]
+                        );
+                    } else {
+                        $options = '-b 3 -a 0 -A 5 -o 5,0';
+                        $rates = self::calculateDesignScale(
+                            [
+                                'width' => $width,
+                                'height' => $height,
+                            ],
+                            [
+                                'width' => $settings['sampleWidth'],
+                                'height' => $settings['sampleHeight'],
+                            ],
+                            [
+                                'left' => $settings['shiftLeft'],
+                                'top' => $settings['shiftTop']
+                            ]
+                        );
+                    }
 
                     exec(
-                        "{$scriptLocation} -r \"{$rates}\" -b 3 -a 0 -A 5 -o 5,0 {$export} -D {$exportPath} {$designFile} {$templateFile} {$outputFile}"
+                        "{$scriptLocation} -r \"{$rates}\" {$options} {$export} -D {$exportPath} {$designFile} {$templateFile} {$outputFile}"
                     );
                 }
             }
@@ -160,6 +188,22 @@ class ImageGenerateService
 
         if ($actualWidth >= $areaRates['width']) {
             $rate = "{$areaRates['width']}x{$areaRates['height']}+{$shift['left']}+{$shift['top']}";
+        } else {
+            $actualLeft = round((($areaRates['width'] - $actualWidth) / 2) + $shift['left']);
+            $rate = "{$actualWidth}x{$areaRates['height']}+{$actualLeft}+{$shift['top']}";
+        }
+
+        return $rate;
+    }
+
+    private static function calculateFullCenter(array $designRates, array $areaRates, array $shift)
+    {
+        $actualWidth = round(($designRates['width'] / $designRates['height']) * $areaRates['height']);
+        $actualHeight = round(($designRates['height'] / $designRates['width']) * $areaRates['width']);
+        
+        if ($actualWidth >= $areaRates['width']) {
+            $actualTop = round((($areaRates['height'] - $actualHeight) / 2) + $shift['top']);
+            $rate = "{$areaRates['width']}x{$areaRates['height']}+{$shift['left']}+{$actualTop}";
         } else {
             $actualLeft = round((($areaRates['width'] - $actualWidth) / 2) + $shift['left']);
             $rate = "{$actualWidth}x{$areaRates['height']}+{$actualLeft}+{$shift['top']}";

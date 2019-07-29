@@ -141,7 +141,7 @@ class GenerateManager
      * imageIntersect
      * @return bool 
      */
-    private function imageIntersect(array $imageIntersect, array $baseImages)
+    /* private function imageIntersect(array $imageIntersect, array $baseImages)
     {
         $avalibleImages = [];
 
@@ -158,5 +158,5 @@ class GenerateManager
         }
 
         return $return;
-    }
+    } */
 }

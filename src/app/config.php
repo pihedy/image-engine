@@ -27,10 +27,10 @@ return [
         ],
         'pamutlaborStaging' => [
             'secretKey' => '123456',
-            'domain' => 'https://staging-pamutlabor.kinsta.com',
+            'domain' => 'https://staging-pamutlabor.kinsta.cloud',
             'woocommerce' => [
-                'userKey' => 'ck_fbb111d07cef28abc855868515946a6886d0f953',
-                'secretKey' => 'cs_009a0f0a290494ffbbc3405dea6a964bb4a9a0e9',
+                'userKey' => 'ck_ab0a7a839635e3ec236ece46c37aa7d4a3e66e7a',
+                'secretKey' => 'cs_48947bc253164bc51746f51bb50993b9b261d677',
                 'options' => [
                     'wp_api' => true,
                     'version' => 'wc/v2',
@@ -39,7 +39,7 @@ return [
         ],
         'teetakuStaging' => [
             'secretKey' => '123456',
-            'domain' => 'http://staging-teetaku.kinsta.cloud',
+            'domain' => 'https://staging-teetaku.kinsta.cloud',
             'woocommerce' => [
                 'userKey' => 'ck_6b960ab4fb14735d6032c4168d90cffc67c60d06',
                 'secretKey' => 'cs_343b490d3b1ce15f7146bfefb3d54da0b562ab4d',
